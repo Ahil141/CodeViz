@@ -1,0 +1,429 @@
+### DOCUMENT_TYPE: INTERACTIVE
+### TOPIC: CIRCULAR LINKED LIST
+### DESCRIPTION: This file contains a fully interactive HTML/JS page that demonstrates how a circular singly linked list works with insertion, deletion, traversal, and visualization (tail connects back to head).
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Circular Linked List Learning Tool</title>
+<style>
+body { 
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+    background-color: #f4f7f6; color: #333; 
+    display: flex; flex-direction: column; 
+    align-items: center; padding-top: 20px; 
+}
+h1 { color: #2c3e50; }
+.container { 
+    background: white; padding: 20px 30px; border-radius: 10px; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+    width: 90%; max-width: 800px; position: relative;
+}
+.controls { 
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+    gap: 15px; margin-bottom: 25px; padding-bottom: 20px; 
+    border-bottom: 1px solid #e0e0e0;
+}
+.control-group { display: flex; flex-direction: column; }
+.control-group label { margin-bottom: 5px; font-weight: 500; color: #555; }
+input[type="text"], input[type="number"] { 
+    padding: 10px; border: 1px solid #ccc; 
+    border-radius: 5px; font-size: 16px; 
+}
+button { 
+    background-color: #3498db; color: white; border: none; padding: 10px 15px; 
+    border-radius: 5px; cursor: pointer; font-size: 16px; 
+    transition: background-color 0.3s ease; 
+}
+button:hover { background-color: #2980b9; }
+button.danger { background-color: #e74c3c; }
+button.danger:hover { background-color: #c0392b; }
+#head-display { 
+    font-family: 'Courier New', Courier, monospace; font-size: 1.2em; 
+    font-weight: bold; color: #c0392b; margin-bottom: 20px; 
+    text-align: center; padding: 10px; background: #fdf5e6; 
+    border-radius: 5px; border: 1px solid #fbe5c5; 
+}
+#visualizer { 
+    display: flex; align-items: center; flex-wrap: wrap; 
+    min-height: 100px; padding: 20px; 
+    background-color: #ecf0f1; border-radius: 8px; 
+    border: 1px dashed #bdc3c7; position: relative; z-index: 1;
+}
+.node { 
+    display: flex; align-items: center; justify-content: center; 
+    background: #3498db; color: white; border: 2px solid #2980b9; 
+    width: 50px; height: 50px; border-radius: 50%; 
+    font-size: 18px; font-weight: bold; margin: 5px; 
+    position: relative; z-index: 2;
+}
+.head-label { 
+    position: absolute; top: -15px; left: 25px; 
+    background-color: #e74c3c; color: white; 
+    padding: 2px 8px; border-radius: 10px; 
+    font-size: 12px; font-weight: bold; z-index: 3; 
+}
+.arrow { font-size: 22px; color: #2c3e50; margin: 0 10px; transform: rotate(0deg); display:inline-block; vertical-align: middle; }
+.null-text { font-style: italic; color: #7f8c8d; font-size: 16px; margin-left: 10px; }
+
+/* Modal Fix */
+#codeModal {
+    display:none;
+    position:fixed;
+    top:0; left:0; width:100%; height:100%;
+    background:rgba(0,0,0,0.7);
+    justify-content:center;
+    align-items:center;
+    z-index: 9999;  /* FIXES OVERLAPPING */
+}
+.code-box {
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    width:90%;
+    max-width:650px;
+    max-height:80%;
+    overflow-y:auto;
+    box-shadow:0 4px 12px rgba(0,0,0,0.3);
+}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Circular Linked List Interactive Tool</h1>
+
+<div class="controls">
+    <div class="control-group"><label for="nodeValue">Node Value:</label><input type="text" id="nodeValue" placeholder="e.g., 10"></div>
+    <div class="control-group"><label for="nodeIndex">Node Index:</label><input type="number" id="nodeIndex" placeholder="e.g., 2"></div>
+</div>
+
+<div class="controls">
+     <button id="addStartBtn">Add to Start</button>
+     <button id="addEndBtn">Add to End</button>
+     <button id="addIndexBtn">Add at Index</button>
+     <button id="removeStartBtn" class="danger">Remove from Start</button>
+     <button id="removeEndBtn" class="danger">Remove from End</button>
+     <button id="removeIndexBtn" class="danger">Remove at Index</button>
+     <button id="showCodeBtn">Show Python Code</button>
+</div>
+
+<div id="head-display"></div>
+<div id="visualizer"></div>
+</div>
+
+<!-- Modal -->
+<div id="codeModal">
+    <div class="code-box">
+        <h2>Python Code: Circular Linked List</h2>
+        <pre id="pythonCode" style="background:#f4f4f4; padding:15px; border-radius:5px;"></pre>
+        <button onclick="document.getElementById('codeModal').style.display='none'" 
+        style="margin-top:10px; padding:10px 20px; border:none; background:#e74c3c; color:white; border-radius:5px;">
+        Close
+        </button>
+    </div>
+</div>
+
+<script>
+class Node {
+    constructor(data, next = null) {
+        this.data = data;
+        this.next = next;
+    }
+}
+
+/* Circular singly linked list where tail.next points to head (if non-empty) */
+class CircularLinkedList {
+    constructor() { this.head = null; this.tail = null; this.size = 0; }
+
+    insertFirst(data) {
+        const node = new Node(data);
+        if (!this.head) {
+            this.head = node;
+            this.tail = node;
+            node.next = node;
+        } else {
+            node.next = this.head;
+            this.head = node;
+            this.tail.next = this.head;
+        }
+        this.size++;
+    }
+
+    insertLast(data) {
+        const node = new Node(data);
+        if (!this.head) {
+            this.head = node;
+            this.tail = node;
+            node.next = node;
+        } else {
+            this.tail.next = node;
+            this.tail = node;
+            this.tail.next = this.head;
+        }
+        this.size++;
+    }
+
+    insertAt(data, index) {
+        if (index < 0 || index > this.size) return;
+        if (index === 0) return this.insertFirst(data);
+        if (index === this.size) return this.insertLast(data);
+
+        let curr = this.head;
+        let i = 0;
+        while (i < index - 1) {
+            curr = curr.next;
+            i++;
+        }
+        const node = new Node(data, curr.next);
+        curr.next = node;
+        this.size++;
+    }
+
+    removeFirst() {
+        if (!this.head) return;
+        if (this.head === this.tail) {
+            this.head = null;
+            this.tail = null;
+            this.size = 0;
+            return;
+        }
+        this.head = this.head.next;
+        this.tail.next = this.head;
+        this.size--;
+    }
+
+    removeLast() {
+        if (!this.head) return;
+        if (this.head === this.tail) {
+            this.head = null;
+            this.tail = null;
+            this.size = 0;
+            return;
+        }
+        let curr = this.head;
+        while (curr.next !== this.tail) {
+            curr = curr.next;
+        }
+        curr.next = this.head;
+        this.tail = curr;
+        this.size--;
+    }
+
+    removeAt(index) {
+        if (index < 0 || index >= this.size) return;
+        if (index === 0) return this.removeFirst();
+        let curr = this.head;
+        let i = 0;
+        while (i < index - 1) {
+            curr = curr.next;
+            i++;
+        }
+        curr.next = curr.next.next;
+        if (index === this.size - 1) {
+            this.tail = curr;
+            this.tail.next = this.head;
+        }
+        this.size--;
+    }
+}
+
+const list = new CircularLinkedList();
+const visualizer = document.getElementById('visualizer');
+const headDisplay = document.getElementById('head-display');
+const valueInput = document.getElementById('nodeValue');
+const indexInput = document.getElementById('nodeIndex');
+
+function getValue() {
+    const v = valueInput.value.trim();
+    if (v === '') { alert('Please enter a value.'); return null; }
+    valueInput.value = '';
+    return isNaN(v) ? v : Number(v);
+}
+
+function getIndex() {
+    const iStr = indexInput.value.trim();
+    if (iStr === '') { alert('Please enter an index.'); return null; }
+    const i = parseInt(iStr, 10);
+    if (isNaN(i) || i < 0) { alert('Please enter a valid index.'); return null; }
+    indexInput.value = '';
+    return i;
+}
+
+function updateUI() {
+    visualizer.innerHTML = '';
+    if (!list.head) {
+        headDisplay.textContent = 'HEAD → NULL';
+        visualizer.innerHTML = '<span class="null-text">List is Empty</span>';
+        return;
+    }
+
+    headDisplay.textContent = `HEAD → Node(${list.head.data})  (SIZE: ${list.size})`;
+
+    // To visually indicate circularity, we'll draw nodes and then a final arrow back to head
+    let curr = list.head;
+    const nodes = [];
+    do {
+        nodes.push(curr);
+        curr = curr.next;
+    } while (curr && curr !== list.head);
+
+    let first = true;
+    nodes.forEach((n, idx) => {
+        const nodeDiv = document.createElement('div');
+        nodeDiv.className = 'node';
+        nodeDiv.textContent = n.data;
+
+        if (first) {
+            const headLabel = document.createElement('div');
+            headLabel.className = 'head-label';
+            headLabel.textContent = 'HEAD';
+            nodeDiv.appendChild(headLabel);
+            first = false;
+        }
+
+        visualizer.appendChild(nodeDiv);
+
+        // arrow to next (for circular last node we still show arrow)
+        const arrow = document.createElement('span');
+        arrow.className = 'arrow';
+        arrow.innerHTML = '&rarr;';
+        visualizer.appendChild(arrow);
+    });
+
+    // show that last arrow points to head (visual hint)
+    const loopText = document.createElement('span');
+    loopText.className = 'null-text';
+    loopText.innerHTML = '→ back to HEAD';
+    visualizer.appendChild(loopText);
+}
+
+document.getElementById('addStartBtn').addEventListener('click', () => {
+    const v = getValue();
+    if (v !== null) { list.insertFirst(v); updateUI(); }
+});
+document.getElementById('addEndBtn').addEventListener('click', () => {
+    const v = getValue();
+    if (v !== null) { list.insertLast(v); updateUI(); }
+});
+document.getElementById('addIndexBtn').addEventListener('click', () => {
+    const v = getValue(); const i = getIndex();
+    if (v !== null && i !== null) { list.insertAt(v, i); updateUI(); }
+});
+document.getElementById('removeStartBtn').addEventListener('click', () => {
+    list.removeFirst(); updateUI();
+});
+document.getElementById('removeEndBtn').addEventListener('click', () => {
+    list.removeLast(); updateUI();
+});
+document.getElementById('removeIndexBtn').addEventListener('click', () => {
+    const i = getIndex();
+    if (i !== null) { list.removeAt(i); updateUI(); }
+});
+
+/* SHOW PYTHON CODE */
+document.getElementById("showCodeBtn").addEventListener("click", () => {
+    const pythonCode = `
+class Node:
+    def __init__(self, data):
+        self.data = data
+        self.next = None
+
+class CircularLinkedList:
+    def __init__(self):
+        self.head = None
+        self.tail = None
+        self.size = 0
+
+    def insert_first(self, data):
+        new_node = Node(data)
+        if self.head is None:
+            self.head = new_node
+            self.tail = new_node
+            new_node.next = new_node
+        else:
+            new_node.next = self.head
+            self.head = new_node
+            self.tail.next = self.head
+        self.size += 1
+
+    def insert_last(self, data):
+        new_node = Node(data)
+        if self.head is None:
+            self.head = new_node
+            self.tail = new_node
+            new_node.next = new_node
+        else:
+            self.tail.next = new_node
+            self.tail = new_node
+            self.tail.next = self.head
+        self.size += 1
+
+    def insert_at(self, index, data):
+        if index < 0 or index > self.size:
+            return
+        if index == 0:
+            self.insert_first(data)
+            return
+        if index == self.size:
+            self.insert_last(data)
+            return
+        curr = self.head
+        for _ in range(index - 1):
+            curr = curr.next
+        new_node = Node(data)
+        new_node.next = curr.next
+        curr.next = new_node
+        self.size += 1
+
+    def remove_first(self):
+        if self.head is None:
+            return
+        if self.head == self.tail:
+            self.head = None
+            self.tail = None
+            self.size = 0
+            return
+        self.head = self.head.next
+        self.tail.next = self.head
+        self.size -= 1
+
+    def remove_last(self):
+        if self.head is None:
+            return
+        if self.head == self.tail:
+            self.head = None
+            self.tail = None
+            self.size = 0
+            return
+        curr = self.head
+        while curr.next != self.tail:
+            curr = curr.next
+        curr.next = self.head
+        self.tail = curr
+        self.size -= 1
+
+    def remove_at(self, index):
+        if index < 0 or index >= self.size:
+            return
+        if index == 0:
+            self.remove_first()
+            return
+        curr = self.head
+        for _ in range(index - 1):
+            curr = curr.next
+        curr.next = curr.next.next
+        if index == self.size - 1:
+            self.tail = curr
+            self.tail.next = self.head
+        self.size -= 1
+    `
+    document.getElementById("pythonCode").textContent = pythonCode.trim();
+    document.getElementById("codeModal").style.display = "flex";
+});
+
+updateUI();
+</script>
+</body>
+</html>

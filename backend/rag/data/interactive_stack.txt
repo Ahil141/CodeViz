@@ -1,0 +1,249 @@
+### DOCUMENT_TYPE: INTERACTIVE
+### TOPIC: STACK
+### DESCRIPTION: This file contains a fully interactive HTML/JS page that demonstrates how a stack works with push, pop, peek, and visualization of the top element.
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stack Learning Tool</title>
+
+<style>
+body { 
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+    background-color: #f4f7f6; color: #333; 
+    display: flex; flex-direction: column; 
+    align-items: center; padding-top: 20px; 
+}
+h1 { color: #2c3e50; }
+
+.container { 
+    background: white; padding: 20px 30px; border-radius: 10px; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+    width: 90%; max-width: 800px; position: relative;
+}
+
+.controls { 
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+    gap: 15px; margin-bottom: 25px; padding-bottom: 20px; 
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.control-group { display: flex; flex-direction: column; }
+.control-group label { margin-bottom: 5px; font-weight: 500; color: #555; }
+
+input[type="text"] { 
+    padding: 10px; border: 1px solid #ccc; 
+    border-radius: 5px; font-size: 16px; 
+}
+
+button { 
+    background-color: #3498db; color: white; border: none; padding: 10px 15px; 
+    border-radius: 5px; cursor: pointer; font-size: 16px; 
+    transition: background-color 0.3s ease; 
+}
+button:hover { background-color: #2980b9; }
+button.danger { background-color: #e74c3c; }
+button.danger:hover { background-color: #c0392b; }
+
+#stackTop { 
+    font-family: 'Courier New', Courier, monospace; font-size: 1.2em; 
+    font-weight: bold; color: #c0392b; margin-bottom: 20px; 
+    text-align: center; padding: 10px; background: #fdf5e6; 
+    border-radius: 5px; border: 1px solid #fbe5c5; 
+}
+
+#visualizer { 
+    display: flex; flex-direction: column-reverse; 
+    align-items: center; min-height: 150px; 
+    padding: 20px; background-color: #ecf0f1; 
+    border-radius: 8px; border: 1px dashed #bdc3c7; 
+}
+
+.stack-item { 
+    width: 150px; 
+    background: #3498db; color: white; 
+    border: 2px solid #2980b9; 
+    padding: 12px; text-align: center; 
+    margin: 10px 0; 
+    border-radius: 8px; 
+    font-size: 18px; 
+    font-weight: bold;
+    position: relative;
+}
+
+.top-label { 
+    position: absolute; top: -15px; right: 10px; 
+    background-color: #e67e22; color: white; 
+    padding: 3px 8px; border-radius: 10px; 
+    font-size: 12px; font-weight: bold;
+}
+
+/* Modal Fix */
+#codeModal {
+    display:none;
+    position:fixed;
+    top:0; left:0; width:100%; height:100%;
+    background:rgba(0,0,0,0.7);
+    justify-content:center;
+    align-items:center;
+    z-index: 9999;
+}
+.code-box {
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    width:90%;
+    max-width:650px;
+    max-height:80%;
+    overflow-y:auto;
+    box-shadow:0 4px 12px rgba(0,0,0,0.3);
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>Interactive Stack Visualization Tool</h1>
+
+<div class="controls">
+    <div class="control-group">
+        <label for="valueInput">Value to Push:</label>
+        <input type="text" id="valueInput" placeholder="e.g., 50">
+    </div>
+</div>
+
+<div class="controls">
+     <button id="pushBtn">Push</button>
+     <button id="popBtn" class="danger">Pop</button>
+     <button id="peekBtn">Peek</button>
+     <button id="clearBtn" class="danger">Clear Stack</button>
+     <button id="showCodeBtn">Show Python Code</button>
+</div>
+
+<div id="stackTop">TOP → NULL</div>
+<div id="visualizer"></div>
+
+</div>
+
+<!-- Modal -->
+<div id="codeModal">
+    <div class="code-box">
+        <h2>Python Code: Stack</h2>
+        <pre id="pythonCode" style="background:#f4f4f4; padding:15px; border-radius:5px;"></pre>
+        <button onclick="document.getElementById('codeModal').style.display='none'" 
+        style="margin-top:10px; padding:10px 20px; border:none; background:#e74c3c; color:white; border-radius:5px;">
+        Close
+        </button>
+    </div>
+</div>
+
+<script>
+class Stack {
+    constructor() {
+        this.items = [];
+    }
+    push(x) { this.items.push(x); }
+    pop() { return this.items.pop(); }
+    peek() { return this.items[this.items.length - 1]; }
+    clear() { this.items = []; }
+    isEmpty() { return this.items.length === 0; }
+}
+
+const stack = new Stack();
+const visualizer = document.getElementById("visualizer");
+const topDisplay = document.getElementById("stackTop");
+const valueInput = document.getElementById("valueInput");
+
+function getValue() {
+    const v = valueInput.value.trim();
+    if (v === "") { alert("Please enter a value."); return null; }
+    valueInput.value = "";
+    return isNaN(v) ? v : Number(v);
+}
+
+function updateUI() {
+    visualizer.innerHTML = "";
+
+    if (stack.isEmpty()) {
+        topDisplay.textContent = "TOP → NULL";
+        visualizer.innerHTML = '<span style="color:#7f8c8d;font-size:20px;font-style:italic;">Stack is Empty</span>';
+        return;
+    }
+
+    topDisplay.textContent = `TOP → ${stack.peek()}`;
+
+    stack.items.forEach((val, index) => {
+        const div = document.createElement("div");
+        div.className = "stack-item";
+        div.textContent = val;
+
+        if (index === stack.items.length - 1) {
+            const label = document.createElement("div");
+            label.className = "top-label";
+            label.textContent = "TOP";
+            div.appendChild(label);
+        }
+
+        visualizer.appendChild(div);
+    });
+}
+
+document.getElementById("pushBtn").addEventListener("click", () => {
+    const v = getValue();
+    if (v !== null) { stack.push(v); updateUI(); }
+});
+
+document.getElementById("popBtn").addEventListener("click", () => {
+    if (stack.isEmpty()) { alert("Stack is empty!"); return; }
+    stack.pop();
+    updateUI();
+});
+
+document.getElementById("peekBtn").addEventListener("click", () => {
+    if (stack.isEmpty()) { alert("Stack is empty!"); return; }
+    alert("Top element = " + stack.peek());
+});
+
+document.getElementById("clearBtn").addEventListener("click", () => {
+    stack.clear();
+    updateUI();
+});
+
+/* Modal for Python Code */
+document.getElementById("showCodeBtn").addEventListener("click", () => {
+    const code = `
+class Stack:
+    def __init__(self):
+        self.items = []
+
+    def push(self, x):
+        self.items.append(x)
+
+    def pop(self):
+        if not self.items:
+            return None
+        return self.items.pop()
+
+    def peek(self):
+        if not self.items:
+            return None
+        return self.items[-1]
+
+    def clear(self):
+        self.items = []
+
+    def is_empty(self):
+        return len(self.items) == 0
+    `;
+    document.getElementById("pythonCode").textContent = code.trim();
+    document.getElementById("codeModal").style.display = "flex";
+});
+
+updateUI();
+</script>
+
+</body>
+</html>

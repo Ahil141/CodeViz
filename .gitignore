@@ -1,0 +1,79 @@
+# .gitignore for CodeViz repository
+
+# ----- OS -----
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ----- Python -----
+__pycache__/
+*.py[cod]
+*$py.class
+.python-version
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+instance/
+.webassets-cache
+*.pyc
+
+# Virtual environments
+venv/
+.venv/
+ENV/
+env/
+env.bak/
+
+# Pip / packaging
+pip-log.txt
+pip-delete-this-directory.txt
+
+# SQLite / DB files (chroma, vectordb, local DBs)
+*.sqlite3
+*.sqlite
+*.db
+**/chroma.sqlite3
+**/chromadb/
+**/vectordb/
+**/vector_store/
+
+# Backend generated files
+backend/generated_pages/
+
+# ----- Node / frontend -----
+frontend/node_modules/
+node_modules/
+frontend/build/
+frontend/dist/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+pnpm-lock.yaml
+
+# Environment files
+.env
+.env.*
+
+# ----- IDEs / Editors -----
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+
+# ----- Logs and temporary files -----
+*.log
+tmp/
+temp/
+*.tmp
+
+# ----- Misc -----
+*.bak
+*.orig
