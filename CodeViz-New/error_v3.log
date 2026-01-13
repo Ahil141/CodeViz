@@ -1,8 +1,0 @@
-Starting debug session v3
-Python version: 3.10.11 (tags/v3.10.11:7d4cc5a, Apr  5 2023, 00:38:17) [MSC v.1929 64 bit (AMD64)]
-Torch version: 2.9.1+cpu
-CUDA available: False
-Import successful. getting loader...
-Model path from settings: microsoft/Phi-3.5-mini-instruct
-Device map from settings: None
-Attempting generation...
